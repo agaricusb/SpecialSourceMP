@@ -60,9 +60,21 @@ public class SpecialSourceMP extends AbstractMojo {
     @Parameter( defaultValue = "remapped" )
     private String remappedClassifierName;
 
-    public void execute() throws MojoExecutionException {
-        getLog().info("Hello, world.");
+    /**
+     * Mapping input file and options
+     */
+    @Parameter
+    private String srgIn;
+    @Parameter
+    private boolean reverse;
+    @Parameter
+    private boolean numeric;
+    @Parameter
+    private String inShadeRelocation;
+    @Parameter
+    private String outShadeRelocation;
 
+    public void execute() throws MojoExecutionException {
         if (project.getArtifact().getFile() == null || !project.getArtifact().getFile().isFile()) {
             // message borrowed from maven-shade-plugin
             getLog().error( "The project main artifact does not exist. This could have the following" );
@@ -79,12 +91,18 @@ public class SpecialSourceMP extends AbstractMojo {
                     "Failed to create remapped artifact, " + "project main artifact does not exist." );
         }
 
+        if (srgIn == null) {
+            throw new MojoExecutionException("No mappings given; srgIn required");
+        }
+
         File inputJar = project.getArtifact().getFile();
         File outputJar = remappedArtifactFileWithClassifier();
 
         try {
             JarMapping mapping = new JarMapping();
-            // TODO: mapping.loadMappings();
+
+            mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
+
             JarRemapper remapper = new JarRemapper(mapping);
             remapper.remapJar(Jar.init(inputJar), outputJar);
 
@@ -98,6 +116,7 @@ public class SpecialSourceMP extends AbstractMojo {
                 replaceFile( originalArtifact, outputJar );
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new MojoExecutionException("Error creating shaded jar: " + ex.getMessage(), ex);
         }
 
