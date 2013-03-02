@@ -19,6 +19,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+/**
+ * Create a remapped version of the main project artifact
+ *
+ * Based on maven-shade-plugin
+ */
 @Mojo(name = "remap", defaultPhase = LifecyclePhase.PACKAGE)
 public class RemapMojo extends AbstractMojo {
 
@@ -63,7 +68,7 @@ public class RemapMojo extends AbstractMojo {
     /**
      * Mapping input file and options
      */
-    @Parameter
+    @Parameter( required = true )
     private String srgIn;
     @Parameter
     private boolean reverse;
@@ -91,10 +96,6 @@ public class RemapMojo extends AbstractMojo {
                     "Failed to create remapped artifact, " + "project main artifact does not exist." );
         }
 
-        if (srgIn == null) {
-            throw new MojoExecutionException("No mappings given; srgIn required");
-        }
-
         File inputJar = project.getArtifact().getFile();
         File outputJar = remappedArtifactFileWithClassifier();
 
@@ -117,7 +118,7 @@ public class RemapMojo extends AbstractMojo {
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            throw new MojoExecutionException("Error creating shaded jar: " + ex.getMessage(), ex);
+            throw new MojoExecutionException("Error creating remapped jar: " + ex.getMessage(), ex);
         }
 
     }
