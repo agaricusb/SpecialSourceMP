@@ -1,4 +1,4 @@
-package net.md_5.SpecialSource;
+package net.md_5.specialsource.mavenplugin;
 
 import net.md_5.specialsource.Jar;
 import net.md_5.specialsource.JarMapping;
@@ -20,7 +20,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 @Mojo(name = "remap", defaultPhase = LifecyclePhase.PACKAGE)
-public class SpecialSourceMP extends AbstractMojo {
+public class RemapMojo extends AbstractMojo {
 
     /**
      * The current Maven project.
