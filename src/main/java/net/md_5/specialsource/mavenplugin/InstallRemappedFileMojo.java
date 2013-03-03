@@ -1,9 +1,6 @@
 package net.md_5.specialsource.mavenplugin;
 
-import net.md_5.specialsource.Jar;
-import net.md_5.specialsource.JarMapping;
-import net.md_5.specialsource.JarRemapper;
-import net.md_5.specialsource.URLDownloader;
+import net.md_5.specialsource.*;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
@@ -12,6 +9,7 @@ import org.apache.maven.artifact.metadata.ArtifactMetadata;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.repository.DefaultArtifactRepository;
 import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.AbstractMojo;
@@ -36,10 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Install remapped dependencies
@@ -118,10 +113,10 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     protected String classifier;
 
     /**
-     * The input jar to be remapped and installed. May be a remote URL.
+     * The input jar(s) to be remapped and installed. May be remote URLs.
      */
-    @Parameter( property = "in-jar", required = true )
-    private String inJar;
+    @Parameter( property = "in-jars", required = true )
+    private String[] inJars;
 
     /**
      * The bundled API docs for the artifact.
@@ -173,12 +168,6 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     private ModelValidator modelValidator; // TODO: what is the non-deprecated replacement for mvn 3? maven-install-plugin uses this but its on mvn 2.0.6
 
     public void execute() throws MojoFailureException, MojoExecutionException {
-        installArtifact();
-
-        // TODO: add as dependency
-    }
-
-    private void installArtifact() throws MojoFailureException, MojoExecutionException {
         // Validate
         validateArtifactInformation();
 
@@ -197,14 +186,24 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         // Remap
         File outJar = null;
         try {
+            // load input jar(s), as one combined jar (for jarmods)
+            List<File> files = new ArrayList<File>();
+            for (String filename : inJars) {
+                files.add(URLDownloader.getLocalFile(filename));
+            }
+            Jar inJar = Jar.init(files);
+
+            // temporary output file TODO: cleanup
             outJar = File.createTempFile(groupId + "." + artifactId + "-" + version, "." + packaging);
 
+            // mappings
             JarMapping mapping = new JarMapping();
-
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
+            mapping.setFallbackInheritanceProvider(new JarInheritanceProvider(inJar));
 
+            // remap
             JarRemapper remapper = new JarRemapper(mapping);
-            remapper.remapJar(Jar.init(URLDownloader.getLocalFile(inJar)), outJar);
+            remapper.remapJar(inJar, outJar);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error creating remapped jar: " + ex.getMessage(), ex);
@@ -230,12 +229,10 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         }
 
 
-        // Install artifact
+        // Install artifact (based on maven-install-plugin)
 
         Collection metadataFiles = new LinkedHashSet();
 
-        // TODO: maybe not strictly correct, while we should enforce that packaging has a type handler of the same id,
-        // we don't
         try
         {
             installer.install( outJar, artifact, localRepository );
@@ -283,6 +280,29 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         }
 
         installChecksums( metadataFiles );
+
+        /* TODO: set as dependency?
+        may not be feasible to add dynamically - instead, add in your pom.xml by hand then 'mvn initialize' & 'mvn package'
+
+        mvn dependency:list
+
+        http://maven.40175.n5.nabble.com/How-to-add-a-dependency-dynamically-during-the-build-in-a-plugin-td116484.html
+        "How to add a dependency dynamically during the build in a plugin?"
+        no solution
+
+        https://gist.github.com/agaricusb/5073308/raw/aeae7738ec5da5274eab143d9f92c439f9b07f47/gistfile1.txt
+        "Maven: A Developer's Notebook - Chapter 6. Writing Maven Plugins > Adding Dynamic Dependencies"
+        adding to classpath..
+
+        // Add dependency
+        Dependency dependency = new Dependency();
+        dependency.setGroupId(groupId);
+        dependency.setArtifactId(artifactId);
+        dependency.setVersion(version);
+        dependency.setScope("compile"); // TODO: system?
+        //dependency.setSystemPath();
+
+        project.getDependencies().add(dependency);*/
     }
 
     /**
