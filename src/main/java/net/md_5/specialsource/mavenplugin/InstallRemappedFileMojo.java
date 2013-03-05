@@ -145,6 +145,8 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     private String inShadeRelocation;
     @Parameter
     private String outShadeRelocation;
+    @Parameter
+    private String[] accessTransformers;
 
     /**
      * Map that contains the repository layouts.
@@ -201,8 +203,16 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
             mapping.setFallbackInheritanceProvider(new JarInheritanceProvider(inJar));
 
-            // remap
             JarRemapper remapper = new JarRemapper(mapping);
+
+            // access transformers
+            if (accessTransformers != null) {
+                for (String filename : accessTransformers) {
+                    remapper.addAccessTransformer(filename);
+                }
+            }
+
+            // remap
             remapper.remapJar(inJar, outJar);
         } catch (Exception ex) {
             ex.printStackTrace();
