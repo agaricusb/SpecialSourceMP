@@ -99,6 +99,10 @@ public class RemapMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (project.getArtifact().getFile() == null || !project.getArtifact().getFile().isFile()) {
+            if (project.getGroupId().equals("net.minecraftforge") && project.getName().equals("ForgeMod")) {
+                System.out.println("Ignoring no main project artifact for ForgeMod parent project");
+                return;
+            }
             // message borrowed from maven-shade-plugin
             getLog().error( "The project main artifact does not exist. This could have the following" );
             getLog().error( "reasons:" );
