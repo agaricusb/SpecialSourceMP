@@ -205,7 +205,9 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             // access transformers
             if (accessTransformers != null) {
                 for (String filename : accessTransformers) {
-                    remapper.addAccessTransformer(filename);
+                    if (filename != null && filename.length() != 0) {
+                        remapper.addAccessTransformer(filename);
+                    }
                 }
             }
 
