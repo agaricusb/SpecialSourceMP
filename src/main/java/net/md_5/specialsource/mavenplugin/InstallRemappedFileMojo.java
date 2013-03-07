@@ -195,7 +195,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             }
             Jar inJar = Jar.init(files);
 
-            // temporary output file TODO: cleanup
+            // temporary output file
             outJar = File.createTempFile(groupId + "." + artifactId + "-" + version, "." + packaging);
 
             // mappings
@@ -216,7 +216,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             remapper.remapJar(inJar, outJar);
         } catch (Exception ex) {
             ex.printStackTrace();
-            throw new MojoExecutionException("Error creating remapped jar: " + ex.getMessage(), ex);
+            throw new MojoExecutionException("Error creating remapped jar at "+outJar+": " + ex.getMessage(), ex);
         }
 
 
@@ -251,7 +251,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         catch ( ArtifactInstallationException e )
         {
             throw new MojoExecutionException(
-                    "Error installing artifact '" + artifact.getDependencyConflictId() + "': " + e.getMessage(), e );
+                    "Error installing artifact '" + artifact.getDependencyConflictId() + "' at "+outJar+": " + e.getMessage(), e );
         }
         finally
         {
@@ -290,6 +290,9 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         }
 
         installChecksums( metadataFiles );
+
+        // Remove temporary file after it has been installed
+        outJar.delete();
 
         /* TODO: set as dependency?
         may not be feasible to add dynamically - instead, add in your pom.xml by hand then 'mvn initialize' & 'mvn package'
