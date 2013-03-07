@@ -176,14 +176,11 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         Artifact artifact =
                 artifactFactory.createArtifactWithClassifier( groupId, artifactId, version, packaging, classifier );
 
-        /* TODO
-        if ( outJar.equals( getLocalRepoFile( artifact ) ) )
-        {
-            throw new MojoFailureException(
-                    "Cannot install artifact. " + "Artifact is already in the local repository.\n\nFile in question is: "
-                            + inJar + "\n" );
+        File existingFile = getLocalRepoFile(artifact);
+        if (existingFile != null && existingFile.exists()) {
+            System.out.println("Using cached remapped artifact "+ existingFile.getPath()); // delete file to reinstall
+            return; // success
         }
-        */
 
         // Remap
         File outJar = null;
