@@ -30,6 +30,7 @@ import org.apache.maven.project.validation.ModelValidator;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.WriterFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
@@ -200,16 +201,21 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
             mapping.setFallbackInheritanceProvider(new JarInheritanceProvider(inJar));
 
-            JarRemapper remapper = new JarRemapper(mapping);
-
             // access transformers
+            RemapperPreprocessor preprocessor = null;
             if (accessTransformers != null) {
+                AccessMap accessMap = new AccessMap();
+
                 for (String filename : accessTransformers) {
                     if (filename != null && filename.length() != 0) {
-                        remapper.addAccessTransformer(filename);
+                        accessMap.loadAccessTransformer(filename);
                     }
                 }
+
+                preprocessor = new RemapperPreprocessor(null, null, accessMap);
             }
+
+            JarRemapper remapper = new JarRemapper(preprocessor, mapping);
 
             // remap
             remapper.remapJar(inJar, outJar);
