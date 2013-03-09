@@ -22,7 +22,7 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>SpecialSource</artifactId>
-            <version>1.4-SNAPSHOT</version>
+            <version>1.4</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
