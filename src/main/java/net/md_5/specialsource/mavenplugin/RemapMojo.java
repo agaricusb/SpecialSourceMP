@@ -74,6 +74,16 @@ public class RemapMojo extends AbstractMojo {
     private File outputDirectory;
 
     /**
+     * The name of the shaded artifactId.
+     * <p/>
+     * If you like to change the name of the native artifact, you may use the &lt;build>&lt;finalName> setting.
+     * If this is set to something different than &lt;build>&lt;finalName>, no file replacement
+     * will be performed, even if shadedArtifactAttached is being used.
+     */
+    @Parameter
+    private String finalName;
+
+    /**
      * The name of the remapped artifactId. So you may want to use a different artifactId and keep
      * the standard version. If the original artifactId was "foo" then the final artifact would
      * be something like foo-1.0.jar. So if you change the artifactId you might have something
@@ -164,15 +174,31 @@ public class RemapMojo extends AbstractMojo {
             JarRemapper remapper = new JarRemapper(mapping);
             remapper.remapJar(inputJar, outputFile);
 
+            boolean renamed = false;
+
+            // rename the output file if a specific finalName is set
+            // but don't rename if the finalName is the <build><finalName>
+            // because this will be handled implicitly later
+            if ( finalName != null && finalName.length() > 0 && !finalName.equals(
+                    project.getBuild().getFinalName() ) )
+            {
+                String finalFileName = finalName + "." + project.getArtifact().getArtifactHandler().getExtension();
+                File finalFile = new File( outputDirectory, finalFileName );
+                replaceFile( finalFile, outputFile );
+                renamed = true;
+            }
+
             if (remappedArtifactAttached) {
                 getLog().info("Attaching remapped artifact.");
                 projectHelper.attachArtifact( project, project.getArtifact().getType(), remappedClassifierName,
                         outputFile);
-            } else {
+            } else if (!renamed) {
                 getLog().info("Replacing original artifact with remapped artifact.");
                 File originalArtifact = project.getArtifact().getFile();
                 replaceFile( originalArtifact, outputFile);
             }
+
+
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error creating remapped jar: " + ex.getMessage(), ex);
