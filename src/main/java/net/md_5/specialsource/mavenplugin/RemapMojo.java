@@ -16,6 +16,8 @@
 package net.md_5.specialsource.mavenplugin;
 
 import net.md_5.specialsource.*;
+import net.md_5.specialsource.provider.JarProvider;
+import net.md_5.specialsource.provider.JointProvider;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
@@ -154,7 +156,7 @@ public class RemapMojo extends AbstractMojo {
             Jar inputJar = Jar.init(inputFile);
 
             // Load remapped dependencies for inheritance lookup
-            InheritanceProviders inheritanceProviders = new InheritanceProviders();
+            JointProvider inheritanceProviders = new JointProvider();
             for (String artifactString : remappedDependencies) {
                 String[] array = artifactString.split(":");
                 if (array.length != 4) {
@@ -165,9 +167,9 @@ public class RemapMojo extends AbstractMojo {
                 artifactResolver.resolve(artifact, remoteRepositories, localRepository);
                 File dependencyFile = artifact.getFile();
                 System.out.println("Adding inheritance "+dependencyFile.getPath());
-                inheritanceProviders.add(new JarInheritanceProvider(Jar.init(dependencyFile)));
+                inheritanceProviders.add(new JarProvider(Jar.init(dependencyFile)));
             }
-            inheritanceProviders.add(new JarInheritanceProvider(inputJar));
+            inheritanceProviders.add(new JarProvider(inputJar));
             mapping.setFallbackInheritanceProvider(inheritanceProviders);
 
             // Do the remap

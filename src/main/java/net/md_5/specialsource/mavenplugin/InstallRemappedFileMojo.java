@@ -16,6 +16,8 @@
 package net.md_5.specialsource.mavenplugin;
 
 import net.md_5.specialsource.*;
+import net.md_5.specialsource.provider.JarProvider;
+import net.md_5.specialsource.util.FileLocator;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.installer.ArtifactInstallationException;
@@ -204,7 +206,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             // load input jar(s), as one combined jar (for jarmods)
             List<File> files = new ArrayList<File>();
             for (String filename : inJars) {
-                files.add(URLDownloader.getLocalFile(filename));
+                files.add(FileLocator.getFile(filename));
             }
             Jar inJar = Jar.init(files);
 
@@ -214,7 +216,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             // mappings
             JarMapping mapping = new JarMapping();
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
-            mapping.setFallbackInheritanceProvider(new JarInheritanceProvider(inJar));
+            mapping.setFallbackInheritanceProvider(new JarProvider(inJar));
 
             // access transformers
             RemapperPreprocessor preprocessor = null;
