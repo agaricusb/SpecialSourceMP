@@ -26,6 +26,7 @@ import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -189,7 +190,7 @@ public class RemapMojo extends AbstractMojo {
             {
                 String finalFileName = finalName + "." + project.getArtifact().getArtifactHandler().getExtension();
                 File finalFile = new File( outputDirectory, finalFileName );
-                replaceFile( finalFile, outputFile );
+                replaceFile( getLog(), outputDirectory, finalFile, outputFile );
                 renamed = true;
             }
 
@@ -200,7 +201,7 @@ public class RemapMojo extends AbstractMojo {
             } else if (!renamed) {
                 getLog().info("Replacing original artifact with remapped artifact.");
                 File originalArtifact = project.getArtifact().getFile();
-                replaceFile( originalArtifact, outputFile);
+                replaceFile( getLog(), outputDirectory, originalArtifact, outputFile);
             }
 
 
@@ -219,10 +220,10 @@ public class RemapMojo extends AbstractMojo {
         return new File( outputDirectory, shadedName );
     }
 
-    private void replaceFile( File oldFile, File newFile )
+    public static void replaceFile( Log log, File outputDirectory, File oldFile, File newFile )
             throws MojoExecutionException
     {
-        getLog().info( "Replacing " + oldFile + " with " + newFile );
+        log.info("Replacing " + oldFile + " with " + newFile);
 
         File origFile = new File( outputDirectory, "original-" + oldFile.getName() );
         if ( oldFile.exists() && !oldFile.renameTo( origFile ) )
@@ -251,7 +252,7 @@ public class RemapMojo extends AbstractMojo {
                 catch ( IOException ex )
                 {
                     //kind of ignorable here.   We're just trying to save the original
-                    getLog().warn( ex );
+                    log.warn(ex);
                 }
             }
         }

@@ -171,6 +171,13 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     /**
      * Output options
      */
+
+    @Parameter ( defaultValue =  "false" )
+    private boolean replaceMainArtifact;
+
+    @Parameter( defaultValue = "${project.build.directory}" )
+    private File outputDirectory;
+
     @Parameter ( defaultValue = "false" )
     private boolean attachArtifact;
 
@@ -256,6 +263,13 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error creating remapped jar at "+outJar+": " + ex.getMessage(), ex);
+        }
+
+        // Replace main artifact with this remapped artifact
+        if (replaceMainArtifact) {
+            getLog().info("Replacing original artifact with remapped artifact.");
+            File originalArtifact = project.getArtifact().getFile();
+            RemapMojo.replaceFile(getLog(), outputDirectory, originalArtifact, outJar);
         }
 
         // Attach output artifact to this project
