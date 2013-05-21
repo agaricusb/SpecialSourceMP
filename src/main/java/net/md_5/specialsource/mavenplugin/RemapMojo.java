@@ -118,6 +118,8 @@ public class RemapMojo extends AbstractMojo {
     @Parameter
     private boolean numeric;
     @Parameter
+    private boolean generateAPI;
+    @Parameter
     private String inShadeRelocation;
     @Parameter
     private String outShadeRelocation;
@@ -174,6 +176,7 @@ public class RemapMojo extends AbstractMojo {
 
             // Do the remap
             JarRemapper remapper = new JarRemapper(mapping);
+            remapper.setGenerateAPI(generateAPI);
             remapper.remapJar(inputJar, outputFile);
 
             boolean renamed = false;

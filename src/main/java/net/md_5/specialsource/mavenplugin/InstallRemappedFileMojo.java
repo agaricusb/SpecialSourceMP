@@ -160,11 +160,19 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     @Parameter
     private boolean numeric;
     @Parameter
+    private boolean generateAPI;
+    @Parameter
     private String inShadeRelocation;
     @Parameter
     private String outShadeRelocation;
     @Parameter
     private String[] accessTransformers;
+
+    //@Parameter ( defaultValue = "false" )
+    //private boolean attachArtifact;
+
+    @Parameter ( defaultValue = "true" )
+    private boolean installArtifact;
 
     /**
      * Map that contains the repository layouts.
@@ -232,16 +240,21 @@ public class InstallRemappedFileMojo extends AbstractMojo {
                 preprocessor = new RemapperPreprocessor(null, null, accessMap);
             }
 
+            // Do the remap
             JarRemapper remapper = new JarRemapper(preprocessor, mapping);
-
-            // remap
+            remapper.setGenerateAPI(generateAPI);
             remapper.remapJar(inJar, outJar);
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new MojoExecutionException("Error creating remapped jar at "+outJar+": " + ex.getMessage(), ex);
         }
 
+        if (installArtifact) {
+            installArtifact(artifact, outJar);
+        }
+    }
 
+    private void installArtifact(Artifact artifact, File outJar) throws MojoExecutionException {
         // Install POM
         File generatedPomFile = generatePomFile();
         ArtifactMetadata pomMetadata = new ProjectArtifactMetadata( artifact, generatedPomFile );
