@@ -269,7 +269,10 @@ public class InstallRemappedFileMojo extends AbstractMojo {
         if (replaceMainArtifact) {
             getLog().info("Replacing original artifact with remapped artifact.");
             File originalArtifact = project.getArtifact().getFile();
-            outJar.renameTo(originalArtifact);
+            originalArtifact.delete();
+            if (!outJar.renameTo(originalArtifact)) {
+                throw new MojoExecutionException("Error replacing remapped jar at "+originalArtifact+" with "+outJar);
+            }
         }
 
         // Attach output artifact to this project
