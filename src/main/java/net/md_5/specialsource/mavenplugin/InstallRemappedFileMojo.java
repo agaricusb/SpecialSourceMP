@@ -168,8 +168,17 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     @Parameter
     private String[] accessTransformers;
 
-    //@Parameter ( defaultValue = "false" )
-    //private boolean attachArtifact;
+    /**
+     * Output options
+     */
+    @Parameter ( defaultValue = "false" )
+    private boolean attachArtifact;
+
+    @Parameter ( defaultValue =  "jar" )
+    private String attachArtifactType;
+
+    @Parameter ( defaultValue = "" )
+    private String attachArtifactClassifier;
 
     @Parameter ( defaultValue = "true" )
     private boolean installArtifact;
@@ -249,6 +258,17 @@ public class InstallRemappedFileMojo extends AbstractMojo {
             throw new MojoExecutionException("Error creating remapped jar at "+outJar+": " + ex.getMessage(), ex);
         }
 
+        // Attach output artifact to this project
+        if (attachArtifact) {
+            if (attachArtifactClassifier == null || attachArtifactClassifier.equals("")) {
+                attachArtifactClassifier = null;
+            }
+
+            getLog().info("Attaching artifact " + outJar.getPath());
+            projectHelper.attachArtifact(project, attachArtifactType, attachArtifactClassifier, outJar);
+        }
+
+        // Install output artifact to local repository
         if (installArtifact) {
             installArtifact(artifact, outJar);
         }
