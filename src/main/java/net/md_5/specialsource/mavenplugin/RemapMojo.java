@@ -125,6 +125,8 @@ public class RemapMojo extends AbstractMojo {
     private String outShadeRelocation;
     @Parameter
     private String[] remappedDependencies;
+    @Parameter
+    private String[] excludedPackages;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (project.getArtifact().getFile() == null || !project.getArtifact().getFile().isFile()) {
@@ -153,6 +155,11 @@ public class RemapMojo extends AbstractMojo {
         try {
             // Load mappings
             JarMapping mapping = new JarMapping();
+            if (excludedPackages != null) {
+                for (String packageName : excludedPackages) {
+                    mapping.addExcludedPackage(packageName);
+                }
+            }
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
 
             Jar inputJar = Jar.init(inputFile);
@@ -173,6 +180,7 @@ public class RemapMojo extends AbstractMojo {
             }
             inheritanceProviders.add(new JarProvider(inputJar));
             mapping.setFallbackInheritanceProvider(inheritanceProviders);
+
 
             // Do the remap
             JarRemapper remapper = new JarRemapper(mapping);

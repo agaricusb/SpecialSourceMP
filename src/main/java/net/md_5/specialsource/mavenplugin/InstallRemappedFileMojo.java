@@ -167,6 +167,8 @@ public class InstallRemappedFileMojo extends AbstractMojo {
     private String outShadeRelocation;
     @Parameter
     private String[] accessTransformers;
+    @Parameter
+    private String[] excludedPackages;
 
     /**
      * Output options
@@ -239,8 +241,14 @@ public class InstallRemappedFileMojo extends AbstractMojo {
 
             // mappings
             JarMapping mapping = new JarMapping();
+            if (excludedPackages != null) {
+                for (String packageName : excludedPackages) {
+                    mapping.addExcludedPackage(packageName);
+                }
+            }
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
             mapping.setFallbackInheritanceProvider(new JarProvider(inJar));
+
 
             // access transformers
             RemapperPreprocessor preprocessor = null;
