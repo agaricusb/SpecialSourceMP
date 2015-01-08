@@ -21,7 +21,6 @@ import net.md_5.specialsource.provider.JointProvider;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -114,6 +113,8 @@ public class RemapMojo extends AbstractMojo {
     @Parameter( required = true )
     private String srgIn;
     @Parameter
+    private File accessIn;
+    @Parameter
     private boolean reverse;
     @Parameter
     private boolean numeric;
@@ -124,7 +125,7 @@ public class RemapMojo extends AbstractMojo {
     @Parameter
     private String outShadeRelocation;
     @Parameter
-    private String[] remappedDependencies;
+    private String[] remappedDependencies = new String[0];
     @Parameter
     private String[] excludedPackages;
 
@@ -181,9 +182,16 @@ public class RemapMojo extends AbstractMojo {
             inheritanceProviders.add(new JarProvider(inputJar));
             mapping.setFallbackInheritanceProvider(inheritanceProviders);
 
+            // AT Mappings
+            RemapperProcessor accessMapper = null;
+            if (accessIn != null) {
+                AccessMap access = new AccessMap();
+                access.loadAccessTransformer(accessIn);
+                accessMapper = new RemapperProcessor(null, mapping, access);
+            }
 
             // Do the remap
-            JarRemapper remapper = new JarRemapper(mapping);
+            JarRemapper remapper = new JarRemapper(null, mapping, accessMapper);
             remapper.setGenerateAPI(generateAPI);
             remapper.remapJar(inputJar, outputFile);
 

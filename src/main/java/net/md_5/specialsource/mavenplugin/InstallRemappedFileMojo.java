@@ -24,9 +24,7 @@ import org.apache.maven.artifact.installer.ArtifactInstallationException;
 import org.apache.maven.artifact.installer.ArtifactInstaller;
 import org.apache.maven.artifact.metadata.ArtifactMetadata;
 import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.repository.DefaultArtifactRepository;
 import org.apache.maven.artifact.repository.layout.ArtifactRepositoryLayout;
-import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.AbstractMojo;
@@ -47,11 +45,9 @@ import org.apache.maven.project.validation.ModelValidator;
 import org.codehaus.plexus.util.IOUtil;
 import org.codehaus.plexus.util.WriterFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
-import java.net.MalformedURLException;
 import java.util.*;
 
 /**
@@ -251,7 +247,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
 
 
             // access transformers
-            RemapperPreprocessor preprocessor = null;
+            RemapperProcessor preprocessor = null;
             if (accessTransformers != null) {
                 AccessMap accessMap = new AccessMap();
 
@@ -261,7 +257,7 @@ public class InstallRemappedFileMojo extends AbstractMojo {
                     }
                 }
 
-                preprocessor = new RemapperPreprocessor(null, null, accessMap);
+                preprocessor = new RemapperProcessor(null, null, accessMap);
             }
 
             // Do the remap
