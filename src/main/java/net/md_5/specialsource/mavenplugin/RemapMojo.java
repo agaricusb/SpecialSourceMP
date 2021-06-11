@@ -21,6 +21,8 @@ import net.md_5.specialsource.provider.JointProvider;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
+import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -115,6 +117,8 @@ public class RemapMojo extends AbstractMojo {
     @Parameter
     private File accessIn;
     @Parameter
+    private File inputFile;
+    @Parameter
     private boolean reverse;
     @Parameter
     private boolean numeric;
@@ -128,6 +132,17 @@ public class RemapMojo extends AbstractMojo {
     private String[] remappedDependencies = new String[0];
     @Parameter
     private String[] excludedPackages;
+
+    private File resolveArtifact(String artifactString) throws ArtifactResolutionException, ArtifactNotFoundException, MojoExecutionException {
+        String[] array = artifactString.split(":");
+        if (array.length != 4 && array.length != 5) {
+            throw new MojoExecutionException("Invalid artifact dependency name, must be groupId:artifactId:version:type:classifier " + artifactString + " in " + array.length);
+        }
+        String groupId = array[0], artifactId = array[1], version = array[2], type = array[3], classifier = array.length > 4 ? array[4] : null;
+        Artifact artifact = artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
+        artifactResolver.resolve(artifact, remoteRepositories, localRepository);
+        return artifact.getFile();
+    }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
         if (project.getArtifact().getFile() == null || !project.getArtifact().getFile().isFile()) {
@@ -150,7 +165,9 @@ public class RemapMojo extends AbstractMojo {
                     "Failed to create remapped artifact, " + "project main artifact does not exist." );
         }
 
-        File inputFile = project.getArtifact().getFile();
+        if (inputFile == null) {
+            inputFile = project.getArtifact().getFile();
+        }
         File outputFile = remappedArtifactFileWithClassifier();
 
         try {
@@ -161,6 +178,9 @@ public class RemapMojo extends AbstractMojo {
                     mapping.addExcludedPackage(packageName);
                 }
             }
+            if (srgIn.contains(":")) {
+                srgIn = resolveArtifact(srgIn).getPath();
+            }
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
 
             Jar inputJar = Jar.init(inputFile);
@@ -168,14 +188,7 @@ public class RemapMojo extends AbstractMojo {
             // Load remapped dependencies for inheritance lookup
             JointProvider inheritanceProviders = new JointProvider();
             for (String artifactString : remappedDependencies) {
-                String[] array = artifactString.split(":");
-                if (array.length != 4) {
-                    throw new MojoExecutionException("Invalid remapped dependency name, must be groupId:artifactId:version:type:classifier "+artifactString+" in "+array.length);
-                }
-                String groupId = array[0], artifactId = array[1], version = array[2], type = array[3], classifier = null;
-                Artifact artifact = artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
-                artifactResolver.resolve(artifact, remoteRepositories, localRepository);
-                File dependencyFile = artifact.getFile();
+                File dependencyFile = resolveArtifact(artifactString);
                 System.out.println("Adding inheritance "+dependencyFile.getPath());
                 inheritanceProviders.add(new JarProvider(Jar.init(dependencyFile)));
             }
