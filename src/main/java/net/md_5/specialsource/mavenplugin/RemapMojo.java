@@ -119,6 +119,8 @@ public class RemapMojo extends AbstractMojo {
     @Parameter
     private File inputFile;
     @Parameter
+    private File logFile;
+    @Parameter
     private boolean reverse;
     @Parameter
     private boolean numeric;
@@ -206,6 +208,9 @@ public class RemapMojo extends AbstractMojo {
             // Do the remap
             JarRemapper remapper = new JarRemapper(null, mapping, accessMapper);
             remapper.setGenerateAPI(generateAPI);
+            if (logFile != null) {
+                remapper.setLogFile(logFile);
+            }
             remapper.remapJar(inputJar, outputFile);
 
             boolean renamed = false;
