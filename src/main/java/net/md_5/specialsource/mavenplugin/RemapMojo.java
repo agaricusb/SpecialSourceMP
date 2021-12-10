@@ -180,7 +180,7 @@ public class RemapMojo extends AbstractMojo {
                     mapping.addExcludedPackage(packageName);
                 }
             }
-            if (srgIn.contains(":")) {
+            if (srgIn.contains(":") && (srgIn.length() > 1 && srgIn.charAt(1) != ':')) {
                 srgIn = resolveArtifact(srgIn).getPath();
             }
             mapping.loadMappings(srgIn, reverse, numeric, inShadeRelocation, outShadeRelocation);
