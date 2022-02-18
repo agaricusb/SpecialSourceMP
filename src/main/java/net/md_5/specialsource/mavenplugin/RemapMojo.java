@@ -16,6 +16,7 @@
 package net.md_5.specialsource.mavenplugin;
 
 import net.md_5.specialsource.*;
+import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JarProvider;
 import net.md_5.specialsource.provider.JointProvider;
 import org.apache.maven.artifact.Artifact;
@@ -24,6 +25,7 @@ import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
 import org.apache.maven.artifact.resolver.ArtifactResolutionException;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
+import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -39,6 +41,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -141,6 +146,10 @@ public class RemapMojo extends AbstractMojo {
             throw new MojoExecutionException("Invalid artifact dependency name, must be groupId:artifactId:version:type:classifier " + artifactString + " in " + array.length);
         }
         String groupId = array[0], artifactId = array[1], version = array[2], type = array[3], classifier = array.length > 4 ? array[4] : null;
+        return resolveArtifact(groupId, artifactId, version, type, classifier);
+    }
+    
+    private File resolveArtifact(String groupId, String artifactId, String version, String type, String classifier) throws ArtifactResolutionException, ArtifactNotFoundException {
         Artifact artifact = artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
         artifactResolver.resolve(artifact, remoteRepositories, localRepository);
         return artifact.getFile();
@@ -196,6 +205,15 @@ public class RemapMojo extends AbstractMojo {
             }
             inheritanceProviders.add(new JarProvider(inputJar));
             mapping.setFallbackInheritanceProvider(inheritanceProviders);
+            
+            List<URL> dependencyUrls = new ArrayList<URL>();
+            for (Dependency dependency : project.getDependencies()) {
+                if (!dependency.getType().equals("jar")) continue;
+                
+                File file = resolveArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
+                dependencyUrls.add(file.toURI().toURL());
+            }
+            inheritanceProviders.add(new ClassLoaderProvider(new URLClassLoader(dependencyUrls.toArray(new URL[0]))));
 
             // AT Mappings
             RemapperProcessor accessMapper = null;
