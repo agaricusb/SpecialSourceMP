@@ -139,6 +139,8 @@ public class RemapMojo extends AbstractMojo {
     private String[] remappedDependencies = new String[0];
     @Parameter
     private String[] excludedPackages;
+    @Parameter( defaultValue = "true" )
+    private boolean useProjectDependencies;
 
     private File resolveArtifact(String artifactString) throws ArtifactResolutionException, ArtifactNotFoundException, MojoExecutionException {
         String[] array = artifactString.split(":");
@@ -205,15 +207,17 @@ public class RemapMojo extends AbstractMojo {
             }
             inheritanceProviders.add(new JarProvider(inputJar));
             mapping.setFallbackInheritanceProvider(inheritanceProviders);
-            
-            List<URL> dependencyUrls = new ArrayList<URL>();
-            for (Dependency dependency : project.getDependencies()) {
-                if (!dependency.getType().equals("jar")) continue;
-                
-                File file = resolveArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
-                dependencyUrls.add(file.toURI().toURL());
+
+            if (useProjectDependencies) {
+                List<URL> dependencyUrls = new ArrayList<URL>();
+                for (Dependency dependency : project.getDependencies()) {
+                    if (!dependency.getType().equals("jar")) continue;
+
+                    File file = resolveArtifact(dependency.getGroupId(), dependency.getArtifactId(), dependency.getVersion(), dependency.getType(), dependency.getClassifier());
+                    dependencyUrls.add(file.toURI().toURL());
+                }
+                inheritanceProviders.add(new ClassLoaderProvider(new URLClassLoader(dependencyUrls.toArray(new URL[0]))));
             }
-            inheritanceProviders.add(new ClassLoaderProvider(new URLClassLoader(dependencyUrls.toArray(new URL[0]))));
 
             // AT Mappings
             RemapperProcessor accessMapper = null;
