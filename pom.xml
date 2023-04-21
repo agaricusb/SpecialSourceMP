@@ -10,7 +10,7 @@
 
     <groupId>net.md-5</groupId>
     <artifactId>specialsource-maven-plugin</artifactId>
-    <version>1.2.4</version>
+    <version>1.2.5-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
     <name>SpecialSourceMP</name>
 
@@ -34,7 +34,7 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>SpecialSource</artifactId>
-            <version>1.11.0</version>
+            <version>1.11.1</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
