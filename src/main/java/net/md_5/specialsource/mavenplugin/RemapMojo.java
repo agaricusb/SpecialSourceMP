@@ -16,15 +16,9 @@
 package net.md_5.specialsource.mavenplugin;
 
 import net.md_5.specialsource.*;
-import net.md_5.specialsource.provider.ClassLoaderProvider;
 import net.md_5.specialsource.provider.JarProvider;
 import net.md_5.specialsource.provider.JointProvider;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.artifact.factory.ArtifactFactory;
-import org.apache.maven.artifact.repository.ArtifactRepository;
-import org.apache.maven.artifact.resolver.ArtifactNotFoundException;
-import org.apache.maven.artifact.resolver.ArtifactResolutionException;
-import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -36,14 +30,19 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
 import org.codehaus.plexus.util.IOUtil;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.artifact.DefaultArtifact;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactRequest;
+import org.eclipse.aether.resolution.ArtifactResolutionException;
+import org.eclipse.aether.resolution.ArtifactResult;
+import org.eclipse.aether.transfer.ArtifactNotFoundException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -57,23 +56,20 @@ public class RemapMojo extends AbstractMojo {
     /**
      * The current Maven project.
      */
-    @Component
+    @Parameter( defaultValue = "${project}", required = true, readonly = true )
     private MavenProject project;
 
     @Component
     private MavenProjectHelper projectHelper;
 
     @Component
-    private ArtifactResolver artifactResolver;
+    private RepositorySystem repoSystem;
 
-    @Component
-    private ArtifactFactory artifactFactory;
+    @Parameter( defaultValue = "${repositorySystemSession}", required = true, readonly = true )
+    private RepositorySystemSession repoSession;
 
-    @Parameter( property = "localRepository", required = true, readonly = true )
-    private ArtifactRepository localRepository;
-
-    @Parameter( defaultValue = "${project.remoteArtifactRepositories}" )
-    private List<ArtifactRepository> remoteRepositories;
+    @Parameter( defaultValue = "${project.remoteProjectRepositories}", required = true, readonly = true )
+    private List<RemoteRepository> remoteRepositories;
 
    /**
      * The destination directory for the shaded artifact.
@@ -152,9 +148,11 @@ public class RemapMojo extends AbstractMojo {
     }
 
     private File resolveArtifact(String groupId, String artifactId, String version, String type, String classifier) throws ArtifactResolutionException, ArtifactNotFoundException {
-        Artifact artifact = artifactFactory.createArtifactWithClassifier(groupId, artifactId, version, type, classifier);
-        artifactResolver.resolve(artifact, remoteRepositories, localRepository);
-        return artifact.getFile();
+        org.eclipse.aether.artifact.Artifact artifact = new DefaultArtifact(groupId, artifactId, classifier, type, version);
+
+        ArtifactRequest remoteRequest = new ArtifactRequest(artifact, remoteRepositories, null);
+        ArtifactResult remoteResult = repoSystem.resolveArtifact(repoSession, remoteRequest); // throws org.eclipse.aether.resolution.ArtifactResolutionException
+        return remoteResult.getArtifact().getFile();
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
