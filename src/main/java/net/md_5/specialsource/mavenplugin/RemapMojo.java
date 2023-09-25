@@ -15,6 +15,7 @@
  */
 package net.md_5.specialsource.mavenplugin;
 
+import com.google.common.io.Files;
 import net.md_5.specialsource.*;
 import net.md_5.specialsource.provider.JarProvider;
 import net.md_5.specialsource.provider.JointProvider;
@@ -29,7 +30,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.MavenProjectHelper;
-import org.codehaus.plexus.util.IOUtil;
 import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -40,8 +40,6 @@ import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.transfer.ArtifactNotFoundException;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -288,17 +286,7 @@ public class RemapMojo extends AbstractMojo {
                 // Still didn't work.   We'll do a copy
                 try
                 {
-                    FileOutputStream fout = new FileOutputStream( origFile );
-                    FileInputStream fin = new FileInputStream( oldFile );
-                    try
-                    {
-                        IOUtil.copy(fin, fout);
-                    }
-                    finally
-                    {
-                        IOUtil.close( fin );
-                        IOUtil.close( fout );
-                    }
+                    Files.copy( oldFile, newFile );
                 }
                 catch ( IOException ex )
                 {
@@ -318,17 +306,7 @@ public class RemapMojo extends AbstractMojo {
                 // Still didn't work.   We'll do a copy
                 try
                 {
-                    FileOutputStream fout = new FileOutputStream( oldFile );
-                    FileInputStream fin = new FileInputStream( newFile );
-                    try
-                    {
-                        IOUtil.copy( fin, fout );
-                    }
-                    finally
-                    {
-                        IOUtil.close( fin );
-                        IOUtil.close( fout );
-                    }
+                    Files.copy( oldFile, newFile );
                 }
                 catch ( IOException ex )
                 {
