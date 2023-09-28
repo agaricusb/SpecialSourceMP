@@ -286,7 +286,7 @@ public class RemapMojo extends AbstractMojo {
                 // Still didn't work.   We'll do a copy
                 try
                 {
-                    Files.copy( oldFile, newFile );
+                    Files.copy( oldFile, origFile );
                 }
                 catch ( IOException ex )
                 {
@@ -306,7 +306,7 @@ public class RemapMojo extends AbstractMojo {
                 // Still didn't work.   We'll do a copy
                 try
                 {
-                    Files.copy( oldFile, newFile );
+                    Files.copy( newFile, oldFile );
                 }
                 catch ( IOException ex )
                 {
