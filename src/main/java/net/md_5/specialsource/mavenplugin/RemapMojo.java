@@ -274,7 +274,7 @@ public class RemapMojo extends AbstractMojo {
     {
         getLog().info( "Replacing " + oldFile + " with " + newFile );
 
-        File origFile = new File( outputDirectory, "original-" + oldFile.getName() );
+        File origFile = new File( project.getBuild().getDirectory(), "original-" + oldFile.getName() );
         if ( oldFile.exists() && !oldFile.renameTo( origFile ) )
         {
             //try a gc to see if an unclosed stream needs garbage collecting
