@@ -4,7 +4,7 @@
 
     <groupId>net.md-5</groupId>
     <artifactId>specialsource-maven-plugin</artifactId>
-    <version>2.0.5-SNAPSHOT</version>
+    <version>2.0.5</version>
     <packaging>maven-plugin</packaging>
 
     <name>SpecialSourceMP</name>
@@ -31,7 +31,8 @@
         <connection>scm:git:git@github.com:agaricusb/SpecialSourceMP.git</connection>
         <developerConnection>scm:git:git@github.com:agaricusb/SpecialSourceMP.git</developerConnection>
         <url>git@github.com:agaricusb/SpecialSourceMP.git</url>
-    </scm>
+      <tag>specialsource-maven-plugin-2.0.5</tag>
+  </scm>
     <issueManagement>
         <system>GitHub</system>
         <url>https://github.com/agaricusb/SpecialSourceMP/issues</url>
